@@ -1,6 +1,5 @@
 import usb
 
-
 _REG_VER = 0x01  # fw version
 _REG_CFG = 0x02  # config
 _REG_INT = 0x03  # interrupt status
