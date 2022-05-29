@@ -1,3 +1,7 @@
-[submodule "3rdparty/pico-sdk"]
-	path = 3rdparty/pico-sdk
-	url = https://github.com/raspberrypi/pico-sdk.git
+
+[submodule "3rdparty/Adafruit_TinyUSB_Arduino"]
+	path = 3rdparty/Adafruit_TinyUSB_Arduino
+	url = https://github.com/adafruit/Adafruit_TinyUSB_Arduino/
+[submodule "3rdparty/TinyUSB_Mouse_and_Keyboard"]
+	path = 3rdparty/TinyUSB_Mouse_and_Keyboard
+	url = https://github.com/cyborg5/TinyUSB_Mouse_and_Keyboard/
