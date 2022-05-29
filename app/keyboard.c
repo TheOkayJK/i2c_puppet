@@ -7,7 +7,7 @@
 
 #define LIST_SIZE	10 // size of the list keeping track of all the pressed keys
 
-struct entry
+	struct entry
 {
 	char chr;
 	char alt;
