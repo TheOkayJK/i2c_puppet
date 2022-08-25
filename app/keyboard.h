@@ -41,6 +41,16 @@ enum key_mod
 #define KEY_MOD_SHR		0x9C // Right Shift
 #define KEY_MOD_SYM		0x9D
 
+#define KEY_GUI			0xA0
+#define KEY_ESCAPE		0xA1
+#define KEY_CAPS_LOCK	0xA2
+
+#define KEY_PAGE_UP		0xB2
+#define KEY_PAGE_DOWN	0xB3
+#define KEY_HOME		0xB4
+#define KEY_END			0xB5
+
+
 struct key_callback
 {
 	void (*func)(char, enum key_state);
