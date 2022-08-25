@@ -2,6 +2,7 @@
 #include "fifo.h"
 #include "keyboard.h"
 #include "reg.h"
+#include "stdio.h"
 
 #include <pico/stdlib.h>
 
@@ -44,7 +45,7 @@ static const struct entry kbd_entries[][NUM_OF_COLS] =
 	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
 	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
 	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
-	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b' },       { '\n', '|' } },
+	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b', 0x4c }, { '\n', '|' } },
 };
 
 #if NUM_OF_BTNS > 0
@@ -114,12 +115,73 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 				if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
 					const bool shift = (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR]) | self.capslock;
 					const bool alt = self.mods[KEY_MOD_ID_ALT] | self.numlock;
-					const bool is_button = (key <= KEY_BTN_RIGHT1) || ((key >= KEY_BTN_LEFT2) && (key <= KEY_BTN_RIGHT2));
+					const bool is_button = (key <= KEY_BTN_RIGHT1) ||
+										   (key <= KEY_BTN_RIGHT2) ||
+										   (key <= KEY_BTN_LEFT1)  ||
+										   (key >= KEY_BTN_LEFT2);
+					const bool control = self.mods[KEY_MOD_SYM];
 
-					if (alt && !is_button) {
+					if (is_button) {
+						switch (key)
+						{
+						case KEY_BTN_LEFT1:
+							if (alt) {
+								key = '<';
+							} else if (shift) {
+								key = '=';
+							// } else if (control) {
+							// 	key = '';
+							} else {
+								key = 0x1B; // ESC
+							}
+							break;
+						case KEY_BTN_LEFT2:
+							if (alt) {
+								key = '>';
+							} else if (shift) {
+								key = '\\';
+							// } else if (control) {
+							// 	key = '';
+							} else {
+								key = 0xE3; // WIN / Meta
+							}
+							break;
+						case KEY_BTN_RIGHT1:
+							if (alt) {
+								key = '[';
+							} else if (shift) {
+								key = '{';
+							} else if (control) {
+								key = 0x7F; // Delete
+							} else {
+								key = 0x53; // NUM Lock
+							}
+							break;
+						case KEY_BTN_RIGHT2:
+							if (alt) {
+								key = ']';
+							} else if (shift) {
+								key = '}';
+							// } else if (control) {
+							// 	key = '';
+							} else {
+								key = 0x39; // CAPS Lock
+							}
+							break;
+
+						default:
+							break;
+						}
+					} else if (alt) {
 						key = p_entry->alt;
-					} else if (!shift && (key >= 'A' && key <= 'Z')) {
+					} else if (key >= 'A' && key <= 'Z') {
+                        if (control) { // If the SYM key is held down, it's a control key
+						key = key - 0x40;
+                      } else if (!shift) { // lower case letter
 						key = (key + ' ');
+                      } else {
+                        // it's an uppercase letter - do nothing
+                      }
 					}
 				}
 
