@@ -132,8 +132,8 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 									}
 								} else if (shift) {
 									key = '=';
-								} else if (control) {
-									key = '_'; //undefined
+								// } else if (control) {
+								// 	key = '_'; //undefined
 								} else {
 									printf(" L1 \n");
 									key = KEY_ESCAPE; // ESC
@@ -148,8 +148,8 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 									}
 								} else if (shift) {
 									key = '\\';
-								} else if (control) {
-									key = '_'; //undefined 
+								// } else if (control) {
+								// 	key = '_'; //undefined 
 								} else {
 									printf(" L2 \n");
 									key = KEY_GUI; // WIN / Meta / GUI
@@ -182,8 +182,8 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 									}
 								} else if (shift) {
 									key = '}';
-								} else if (control) {
-									key = '_'; //undefined
+								// } else if (control) {
+								// 	key = '_'; //undefined
 								} else {
 									key = KEY_CAPS_LOCK;
 								}
@@ -197,9 +197,23 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
                         if (control) { // If the SYM key is held down, it's a control key
 							key = key - 0x40;
 						} else if (!shift) { // lower case letter
-							key = (key + ' ');
+							key = (key + ' '); // Add 0x20 to value
 						} else {
 							// it's an uppercase letter - do nothing
+						}
+					} else if (key == '$') {
+						if (shift) {
+							key = '&';
+						} else if (control) {
+							key = '^';
+						} else {
+
+						}
+					} else if (key == '~') {
+						if (shift) {
+							key = '%';
+						} else {
+
 						}
 					}
 				}
