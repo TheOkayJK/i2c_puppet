@@ -1,6 +1,6 @@
 # Keymap
 
-From the original firmware the following keys were missing. `<>{}[]^&%=\\`m These hae been added using the top row and additional modifiers.
+From the original firmware the following keys were missing. `< > { } [ ] ^ & % = \` These hae been added using the top row and additional modifiers.
 
 ## Customizations List 
 
@@ -9,7 +9,7 @@ From the original firmware the following keys were missing. `<>{}[]^&%=\\`m Thes
 - `[` : Alt + Back *(R1)*
 - `]` : Alt + End *(R2)*
 - `=` : Shift + Answer
-- `\\` : Shift + Blackberry
+- `\` : Shift + Blackberry
 - `{` : Shift + Back
 - `}` : Shift + End
 - `&` : Shift + Speaker
