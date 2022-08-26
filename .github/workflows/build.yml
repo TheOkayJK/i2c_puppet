@@ -37,6 +37,7 @@ jobs:
                     cmake -DPICO_BOARD=bbq20kbd_breakout -DCMAKE_BUILD_TYPE=Debug ..
                     make
                     cp app/i2c_puppet.{bin,elf,uf2} ../output
+                    cd app && zip latest.zip i2c_puppet.{bin,elf,uf2} && cd .. && mv app/latest.zip .
 
             - name: Upload package artifact
               uses: actions/upload-artifact@v1
@@ -64,6 +65,6 @@ jobs:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                 upload_url: https://uploads.github.com/repos/jdreinhardt/i2c_puppet/releases/75427458/assets{?name,label} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-                asset_path: /home/runner/work/i2c_puppet/i2c_puppet/output/i2c_puppet-bbq20kbd_breakout-${{ steps.short_sha1.outputs.value }}
+                asset_path: ./latest.zip
                 asset_name: latest.zip
                 asset_content_type: application/zip
