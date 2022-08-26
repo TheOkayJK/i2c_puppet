@@ -10,6 +10,10 @@ On the I2C side, you can access the key presses, the trackpad state, you can con
 
 See [Protocol](#protocol) for details of the I2C puppet.
 
+## Customizations
+
+This version has been modified to the missing keys as well as provide additional functionality. The full keymap can be found [here](keymap.md).
+
 ## Checkout
 
 The code depends on the Raspberry Pi Pico SDK, which is added as a submodule. Because the Pico SDK includes TinyUSB as a module, it is not recommended to do a recursive submodule init, and rather follow these steps:
@@ -311,3 +315,7 @@ Default value: 0
 	- Initial release
 
 See here for the legacy project's history: https://github.com/solderparty/bbq10kbd_i2c_sw#version-history
+
+## Thanks
+
+A special thanks to the forks by [grymoire](https://github.com/grymoire/i2c_puppet-Linux) and [DJFliX](https://github.com/DJFliX/bbq20kbd) whose work influenced the results of this one.
