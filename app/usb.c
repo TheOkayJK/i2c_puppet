@@ -63,6 +63,7 @@ static void key_cb(char key, enum key_state state)
 		conv_table[KEY_ESCAPE][1]		= HID_KEY_ESCAPE;
 		conv_table[KEY_GUI][1]			= HID_KEY_GUI_LEFT;
 		conv_table[KEY_CAPS_LOCK][1]	= HID_KEY_CAPS_LOCK;
+		conv_table[KEY_TAB][1]			= HID_KEY_TAB;
 		
 		conv_table[KEY_JOY_UP][1]		= HID_KEY_ARROW_UP;
 		conv_table[KEY_JOY_DOWN][1]		= HID_KEY_ARROW_DOWN;

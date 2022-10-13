@@ -44,6 +44,7 @@ enum key_mod
 #define KEY_GUI			0xA0
 #define KEY_ESCAPE		0xA1
 #define KEY_CAPS_LOCK	0xA2
+#define KEY_TAB			0xA3
 
 #define KEY_PAGE_UP		0xB2
 #define KEY_PAGE_DOWN	0xB3

@@ -132,8 +132,8 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 									}
 								} else if (shift) {
 									key = '=';
-								// } else if (control) {
-								// 	key = '_'; //undefined
+								} else if (control) {
+									key = KEY_TAB;
 								} else {
 									printf(" L1 \n");
 									key = KEY_ESCAPE; // ESC

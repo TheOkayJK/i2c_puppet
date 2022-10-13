@@ -15,6 +15,7 @@ From the original firmware the following keys were missing. `< > { } [ ] ^ & % =
 - `&` : Shift + Speaker
 - `%` : Shift + Mic
 - `^` : Sym + Speaker
+- `Tab` : Sym + Answer
 - `Esc` : Answer
 - `GUI` (Windows) : Blackberry
 - `Num Lock` : Back
@@ -58,7 +59,7 @@ From the original firmware the following keys were missing. `< > { } [ ] ^ & % =
 
 ### Control Modifier
 
-|   |   |   |   |   |scroll|   |del|   |   |
+|tab|   |   |   |   |scroll|   |del|   |   |
 |---|---|---|---|---|------|---|---|---|---|
 |   |   |   |   |   |      |   |   |   |   |
 |   |   |   |   |   |      |   |   |   |   |
