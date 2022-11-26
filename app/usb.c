@@ -62,13 +62,17 @@ static void key_cb(char key, enum key_state state)
 		conv_table[KEY_JOY_LEFT][1]		= HID_KEY_ARROW_LEFT;
 		conv_table[KEY_JOY_RIGHT][1]	= HID_KEY_ARROW_RIGHT;
 		conv_table[KEY_BTN_LEFT2][1]	= HID_KEY_APPLICATION;
-		conv_table[KEY_BTN_LEFT1][1]	= HID_KEY_BACKSPACE;
+		//conv_table[KEY_BTN_LEFT1][1]	= HID_KEY_BACKSPACE;
 		conv_table[KEY_BTN_RIGHT2][1]	= HID_KEY_GUI_LEFT;
 		conv_table[KEY_BTN_RIGHT1][1] 	= HID_KEY_ESCAPE;
 
 		uint8_t keycode[6] = { 0 };
 		uint8_t modifier   = 0;
-
+		if (state == KEY_STATE_PRESSED) {
+			if (key = KEY_BTN_LEFT1) {
+				tud_hid_n_keyboard_report(USB_ITF_KEYBOARD, 0, HID_KEY_GUI_LEFT, HID_KEY_BACKSPACE);
+			}
+		}
 		if (state == KEY_STATE_PRESSED) {
 			if (conv_table[(int)key][0])
 				modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
