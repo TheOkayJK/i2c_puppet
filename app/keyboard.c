@@ -2,6 +2,7 @@
 #include "fifo.h"
 #include "keyboard.h"
 #include "reg.h"
+#include <stdio.h>
 
 #include <pico/stdlib.h>
 
@@ -40,7 +41,7 @@ static const struct entry kbd_entries[][NUM_OF_COLS] =
 {
 	{ { KEY_JOY_CENTER },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
 	{ { },                 { 'Q', '#' },              { 'R', '3' },              { 'E', '2' },              { 'O', '+'  },  { 'U', '_'  } },
-	{ { KEY_BTN_LEFT1 },   { '~', '0' },              { 'F', '6' },              { .mod = KEY_MOD_ID_SHL }, { 'K', '\''  }, { 'J', ';'  } },
+	{ { KEY_BTN_LEFT1 },   { .mod = KEY_MOD_ID_SYM, '0' },              { 'F', '6' },              { .mod = KEY_MOD_ID_SHL }, { 'K', '\''  }, { 'J', ';'  } },
 	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
 	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
 	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
@@ -109,25 +110,133 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 					key = KEY_MOD_SYM;
 				break;
 
+			case KEY_MOD_ID_MIC:
+				if (reg_is_bit_set(REG_ID_CFG, CFG_REPORT_MODS))
+					key = KEY_MOD_MIC;
+				break;
+
 			default:
 			{
-				if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
+				if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS))
+				{
+					if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
 					const bool shift = (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR]) | self.capslock;
 					const bool alt = self.mods[KEY_MOD_ID_ALT] | self.numlock;
-					const bool is_button = (key <= KEY_BTN_RIGHT1) || ((key >= KEY_BTN_LEFT2) && (key <= KEY_BTN_RIGHT2));
-
-					if (alt && !is_button) {
+					const bool ctrl = self.mods[KEY_MOD_ID_MIC];
+					const bool is_button = ((key == KEY_BTN_RIGHT1)
+						|| (key == KEY_BTN_RIGHT2)
+						|| (key == KEY_BTN_LEFT1)
+						|| (key == KEY_BTN_LEFT2));
+ 					const bool gui = self.mods[KEY_MOD_ID_SYM];
+					
+					if (is_button) {
+						switch (key)
+						{
+						case KEY_BTN_LEFT1:
+							if (alt)
+							{
+								key = 0x2B;
+							}
+							else if (shift)
+							{
+								key = 0x29;
+							}
+							else if (ctrl)
+							{
+								key = 0x65;
+							}
+							else
+							{
+								key = 0x76;
+							}
+							break;
+						case KEY_BTN_LEFT2:
+							if (alt)
+							{
+								key = 0x4A;
+							}
+							else if (shift)
+							{
+								key = 0x4D;
+							}
+							else if (ctrl)
+							{
+								key = 0x77;
+							}
+							else
+							{
+								key = 0xE3;
+							}
+							break;
+						case KEY_BTN_RIGHT1:
+							if (alt)
+							{
+								key = 0x7C;
+							}
+							else if (shift)
+							{
+								key = 0x4C;
+							}
+							else if (ctrl)
+							{
+								key = 0x7D;
+							}
+							else
+							{
+								key = 0x2A;
+							}
+							break;
+						case KEY_BTN_RIGHT2:
+							if (alt)
+							{
+								key = 0x46;
+							}
+							else if (shift)
+							{
+								key = 0x79;
+							}
+							else if (ctrl)
+							{
+								key = 0x7F;
+							}
+							else
+							{
+								key = 0x7A;
+							}
+							break;
+						default:
+							//                        printf(" ERROR: Illegal key: %d\n", key);
+							;
+						}
+					}
+					else if (alt)
+					{
+						printf(" alt \n");
 						key = p_entry->alt;
-					} else if (!shift && (key >= 'A' && key <= 'Z')) {
-						key = (key + ' ');
+					}
+					else if (key >= 'A' && key <= 'Z')
+					{
+						printf(" letter\n");
+						if (ctrl)
+						{ // If the SYM key is held down, it's a control key
+							key = key - 0x40;
+						}
+						else if (!shift)
+						{ // lower case letter
+							key = (key + ' ');
+						}
+						else
+						{
+							// it's an uppercase letter - do nothing
+						}
 					}
 				}
 
 				break;
 			}
-		}
+			}
 
-		p_item->effective_key = key;
+			p_item->effective_key = key;
 	}
 
 	if (p_item->effective_key == '\0')
@@ -135,7 +244,6 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 
 	keyboard_inject_event(p_item->effective_key, next_state);
 }
-
 static void next_item_state(struct list_item * const p_item, const bool pressed)
 {
 	switch (p_item->state) {

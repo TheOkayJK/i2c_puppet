@@ -18,6 +18,7 @@ enum key_mod
 	KEY_MOD_ID_ALT,
 	KEY_MOD_ID_SHL,
 	KEY_MOD_ID_SHR,
+	KEY_MOD_ID_MIC,
 
 	KEY_MOD_ID_LAST,
 };
@@ -36,10 +37,11 @@ enum key_mod
 #define KEY_BTN_LEFT2	0x11
 #define KEY_BTN_RIGHT2	0x12
 
-#define KEY_MOD_ALT		0x1A
-#define KEY_MOD_SHL		0x1B // Left Shift
-#define KEY_MOD_SHR		0x1C // Right Shift
-#define KEY_MOD_SYM		0x1D
+#define KEY_MOD_ALT 	0xE2
+#define KEY_MOD_SHL 	0xE1	 // Left Shift
+#define KEY_MOD_SHR 	0xE5		 // Right Shift
+#define KEY_MOD_SYM 	0xE3
+#define KEY_MOD_MIC 	0xE0
 
 struct key_callback
 {
