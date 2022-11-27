@@ -237,8 +237,8 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 			}
 
 			p_item->effective_key = key;
-	}
-
+		}
+	}	
 	if (p_item->effective_key == '\0')
 		return;
 
