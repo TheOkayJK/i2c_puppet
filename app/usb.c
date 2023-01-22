@@ -55,20 +55,43 @@ static void key_cb(char key, enum key_state state)
 		return;
 
 	if (tud_hid_n_ready(USB_ITF_KEYBOARD) && reg_is_bit_set(REG_ID_CF2, CF2_USB_KEYB_ON)) {
-		uint8_t conv_table[128][2]		= { HID_ASCII_TO_KEYCODE };
+		uint8_t conv_table[256][2]		= { HID_ASCII_TO_KEYCODE };
 		conv_table['\n'][1]				= HID_KEY_ENTER; // Fixup: Enter instead of Return
+		conv_table['\b'][1] 			= HID_KEY_BACKSPACE; // Fixup: HID backspace (0x2A) instead of \b (0x08)
+		conv_table['\x4c'][0] 			= 0;
+		conv_table['\x4c'][1] 			= HID_KEY_DELETE;
+		conv_table[KEY_ESCAPE][1]		= HID_KEY_ESCAPE;
+		conv_table[KEY_GUI][1]			= HID_KEY_GUI_LEFT;
+		conv_table[KEY_CAPS_LOCK][1]	= HID_KEY_CAPS_LOCK;
+		conv_table[KEY_TAB][1]			= HID_KEY_TAB;
+		
 		conv_table[KEY_JOY_UP][1]		= HID_KEY_ARROW_UP;
 		conv_table[KEY_JOY_DOWN][1]		= HID_KEY_ARROW_DOWN;
 		conv_table[KEY_JOY_LEFT][1]		= HID_KEY_ARROW_LEFT;
 		conv_table[KEY_JOY_RIGHT][1]	= HID_KEY_ARROW_RIGHT;
 
+		conv_table[KEY_HOME][1]         = HID_KEY_HOME;
+		conv_table[KEY_END][1]          = HID_KEY_END;
+		conv_table[KEY_PAGE_UP][1]      = HID_KEY_PAGE_UP;
+		conv_table[KEY_PAGE_DOWN][1]    = HID_KEY_PAGE_DOWN;
+
 		uint8_t keycode[6] = { 0 };
 		uint8_t modifier   = 0;
 
 		if (state == KEY_STATE_PRESSED) {
-			if (conv_table[(int)key][0])
+			printf(" conv_table[%d][0,1]=%d,%d ",key, conv_table[(int)key][0], conv_table[(int)key][1]); // bgb
+			if (conv_table[(int)key][0]) {
 				modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
-
+			} else if (key < 0x20) { // it's a control key
+				if ((key == '\n') || (key == '\b')) {
+					// leave alone - this is necessary because the Linux graphical login processes the HID equivalent
+					// which is done using conv_table[] below
+				} else {
+					// convert control key, i.e. [Control-A] converts to [modifier=control, key=A]
+					modifier = KEYBOARD_MODIFIER_RIGHTCTRL;
+					key = key + 0x40; 
+				}
+			}
 			keycode[0] = conv_table[(int)key][1];
 		}
 
