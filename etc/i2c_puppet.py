@@ -23,6 +23,8 @@ _REG_IND = 0x13  # interrupt pin assert duration
 _REG_CF2 = 0x14  # config 2
 _REG_TOX = 0x15  # touch delta x since last read, at most (-128 to 127)
 _REG_TOY = 0x16  # touch delta y since last read, at most (-128 to 127)
+_REG_BK3 = 0x17  # Backlight dimming delay (0 = no dimming, 1 = 500ms, 2 = 1000ms, etc.)
+_REG_BK4 = 0x18  # Backlight dimming level
 
 _WRITE_MASK      = 1 << 7
 
@@ -59,9 +61,9 @@ PUD_UP           = 1
 
 
 class I2CPuppet:
-    def __init__(self, vid=0x1209, pid=0xB182):
+    def __init__(self, vid=0x1209, pid=0xB182, backend=None):
         self._buffer = bytearray(2)
-        self._dev = usb.core.find(idVendor=vid, idProduct=pid)
+        self._dev = usb.core.find(idVendor=vid, idProduct=pid, backend=backend)
 
         if self._dev is None:
             raise Exception('Device with vid:pid %04X:%04X not found!' % (vid, pid))
@@ -99,6 +101,23 @@ class I2CPuppet:
     @address.setter
     def address(self, value):
         self._write_register(_REG_ADR, value)
+
+    @property
+    def dimmingDelay(self):
+        return self._read_register(_REG_BK3) / 2
+
+    @dimmingDelay.setter
+    def dimmingDelay(self, value):
+        self._write_register(_REG_BK3, int(value * 2))
+
+    @property
+    def dimmingLevel(self):
+        return self._read_register(_REG_BK4) / 255
+
+    @dimmingLevel.setter
+    def dimmingLevel(self, value):
+        self._write_register(_REG_BK4, int(255 * value))
+
 
     def _read_register(self, reg):
         self._buffer[0] = reg

@@ -1,11 +1,13 @@
 #include "touchpad.h"
 
 #include "keyboard.h"
+#include "backlight.h"
 
 #include <hardware/i2c.h>
 #include <pico/binary_info.h>
 #include <pico/stdlib.h>
 #include <stdio.h>
+#include <tusb.h>
 
 #define DEV_ADDR			0x3B
 
@@ -85,25 +87,28 @@ void touchpad_gpio_irq(uint gpio, uint32_t events)
 		x = ((x < 127) ? x : (x - 256)) * -1;
 		y = ((y < 127) ? y : (y - 256));
 
+		char key = '\0';
+
 		if (keyboard_is_mod_on(KEY_MOD_ID_ALT)) {
 			if (to_ms_since_boot(get_absolute_time()) - self.last_swipe_time > SWIPE_COOLDOWN_TIME_MS) {
-				char key = '\0';
 				if (MOTION_IS_SWIPE(y, x)) {
 					key = (y < 0) ? KEY_JOY_UP : KEY_JOY_DOWN;
 				} else if (MOTION_IS_SWIPE(x, y)) {
 					key = (x < 0) ? KEY_JOY_LEFT : KEY_JOY_RIGHT;
 				}
-
-				if (key != '\0') {
-					keyboard_inject_event(key, KEY_STATE_PRESSED);
-
-					// we need to allow the usb a bit of time to send the press, so schedule the release after a bit
-					add_alarm_in_ms(SWIPE_RELEASE_DELAY_MS, release_key, (void*)(int)key, true);
-
-					self.last_swipe_time = to_ms_since_boot(get_absolute_time());
+			}
+		} else if (keyboard_is_mod_on(KEY_MOD_ID_SHL)) {
+			if (to_ms_since_boot(get_absolute_time()) - self.last_swipe_time > SWIPE_COOLDOWN_TIME_MS) {
+				if (MOTION_IS_SWIPE(y, x)) {
+					key = (y < 0) ? KEY_PAGE_UP : KEY_PAGE_DOWN;
+				} else if (MOTION_IS_SWIPE(x, y)) {
+					key = (x < 0) ? KEY_HOME : KEY_END;
 				}
 			}
+		} else if (keyboard_is_mod_on(KEY_MOD_ID_SHR)) {
+			tud_hid_n_mouse_report(USB_ITF_MOUSE, 0, 0x00, 0, 0, x, y);
 		} else {
+			backlight_trigger();
 			if (self.callbacks) {
 				struct touch_callback *cb = self.callbacks;
 
@@ -114,6 +119,16 @@ void touchpad_gpio_irq(uint gpio, uint32_t events)
 				}
 			}
 		}
+
+		if (key != '\0') {
+			keyboard_inject_event(key, KEY_STATE_PRESSED);
+
+			// we need to allow the usb a bit of time to send the press, so schedule the release after a bit
+			add_alarm_in_ms(SWIPE_RELEASE_DELAY_MS, release_key, (void*)(int)key, true);
+
+			self.last_swipe_time = to_ms_since_boot(get_absolute_time());
+		}
+
 	}
 }
 

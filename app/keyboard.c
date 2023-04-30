@@ -1,7 +1,9 @@
 #include "app_config.h"
 #include "fifo.h"
 #include "keyboard.h"
+#include "backlight.h"
 #include "reg.h"
+#include <stdio.h> // BGB
 
 #include <pico/stdlib.h>
 
@@ -38,13 +40,13 @@ static const uint8_t col_pins[NUM_OF_COLS] =
 
 static const struct entry kbd_entries[][NUM_OF_COLS] =
 {
-	{ { KEY_JOY_CENTER },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },  { 'H' , ':' } },
-	{ { },                 { 'Q', '#' },              { 'R', '3' },              { 'E', '2' },              { 'O', '+'  },  { 'U', '_'  } },
-	{ { KEY_BTN_LEFT1 },   { '~', '0' },              { 'F', '6' },              { .mod = KEY_MOD_ID_SHL }, { 'K', '\''  }, { 'J', ';'  } },
-	{ { },                 { ' ', '\t' },             { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },  { 'N', ','  } },
-	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },  { 'Y', ')'  } },
-	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },  { 'B', '!'  } },
-	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { '\b' },       { '\n', '|' } },
+	{ { KEY_JOY_CENTER },  { 'W', '1' },              { 'G', '/' },              { 'S', '4' },              { 'L', '"'  },       { 'H' , ':' } },
+	{ { },                 { 'Q', '#' },              { 'R', '3' },              { 'E', '2' },              { 'O', '+'  },       { 'U', '_'  } },
+	{ { KEY_BTN_LEFT1 },   { '~', '0' },              { 'F', '6' },              { .mod = KEY_MOD_ID_SHL }, { 'K', '\'' },       { 'J', ';'  } },
+	{ { },                 { ' ', ' ' },              { 'C', '9' },              { 'Z', '7' },              { 'M', '.'  },       { 'N', ','  } },
+	{ { KEY_BTN_LEFT2 },   { .mod = KEY_MOD_ID_SYM }, { 'T', '(' },              { 'D', '5' },              { 'I', '-'  },       { 'Y', ')'  } },
+	{ { KEY_BTN_RIGHT1 },  { .mod = KEY_MOD_ID_ALT }, { 'V', '?' },              { 'X', '8' },              { '$', '`'  },       { 'B', '!'  } },
+	{ { },                 { 'A', '*' },              { .mod = KEY_MOD_ID_SHR }, { 'P', '@' },              { KEY_BS, KEY_DEL }, { KEY_ENTER, KEY_RETURN } },
 };
 
 #if NUM_OF_BTNS > 0
@@ -112,13 +114,85 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 			default:
 			{
 				if (reg_is_bit_set(REG_ID_CFG, CFG_USE_MODS)) {
-					const bool shift = (self.mods[KEY_MOD_ID_SHL] || self.mods[KEY_MOD_ID_SHR]) | self.capslock;
+					const bool shift = self.mods[KEY_MOD_ID_SHL] | self.capslock;
 					const bool alt = self.mods[KEY_MOD_ID_ALT] | self.numlock;
-					const bool is_button = (key <= KEY_BTN_RIGHT1) || ((key >= KEY_BTN_LEFT2) && (key <= KEY_BTN_RIGHT2));
+					const bool is_button = ((key == KEY_BTN_RIGHT1)
+															 || (key == KEY_BTN_RIGHT2)
+															 || (key == KEY_BTN_LEFT1)
+															 || (key == KEY_BTN_LEFT2));
+					const bool control = self.mods[KEY_MOD_ID_SHR] && !self.mods[KEY_MOD_ID_SYM];
+					const bool fnKey   = self.mods[KEY_MOD_ID_SYM] && !self.mods[KEY_MOD_ID_SHR];
+					const bool cAfnKey = self.mods[KEY_MOD_ID_SYM] && self.mods[KEY_MOD_ID_SHR];
 
-					if (alt && !is_button) {
+					if (is_button) {
+						switch (key) {
+						case KEY_BTN_LEFT1:
+							if (alt)          { key = '>';        }
+							else if (shift)   { key = '<';        }
+							else if (control) { key = KEY_GUI;    }
+							else if (fnKey)   { key = '|';        }
+							else if (cAfnKey) { key = 0;          }
+							else              { key = KEY_ESCAPE; }
+							break;
+						case KEY_BTN_LEFT2:
+							if (alt)          { key = ']';     }
+							else if (shift)   { key = '[';     }
+							else if (control) { key = 0;       }
+							else if (fnKey)   { key = '%';     }
+							else if (cAfnKey) { key = 0;       }
+							else              { key = KEY_TAB; }
+							break;
+						case KEY_BTN_RIGHT1:
+							if (alt)          { key = '}';        }
+							else if (shift)   { key = '{';        }
+							else if (control) { key = 0;          }
+							else if (fnKey)   { key = '=';        }
+							else if (cAfnKey) { key = 0;          }
+							else              { key = KEY_MOUSE3; }
+							break;
+						case KEY_BTN_RIGHT2:
+							if (alt)          { key = '&';        }
+							else if (shift)   { key = '^';        }
+							else if (control) { key = 0;          }
+							else if (fnKey)   { key = '\\';       }
+							else if (cAfnKey) { key = KEY_PWR;    }
+							else              { key = KEY_MOUSE2; }
+							break;
+						default:
+// 							printf(" ERROR: Illegal key: %d\n", key);
+							;
+						}
+					} else if (alt) {
+						printf(" alt\n");
 						key = p_entry->alt;
-					} else if (!shift && (key >= 'A' && key <= 'Z')) {
+					} else if (shift) {
+						if (key >= 'A' && key <= 'Z') {
+							printf(" LETTER\n") ;
+						} else {
+							key = '\0' ;
+						}
+					} else if (control) {
+						if (key >= 'A' && key <= 'Z') {
+							key = key - 0x40;
+							printf(" ctrl\n") ;
+						} else {
+							key = '\0' ;
+						}
+					} else if (fnKey || cAfnKey) {
+						key = p_entry->alt;
+						if ((key >= '0') && (key <= '9')) {
+							if (fnKey) {
+								key += (KEY_F10 - '0');
+								printf(" fn\n") ;
+							} else {
+								key += (KEY_CAF10 - '0');
+								printf(" ctrl-alt-fn\n") ;
+							}
+						} else {
+							key = '\0' ;
+						}
+					} else if (key >= 'A' && key <= 'Z') {
+						printf(" letter\n");
 						key = (key + ' ');
 					}
 				}
@@ -133,6 +207,7 @@ static void transition_to(struct list_item * const p_item, const enum key_state 
 	if (p_item->effective_key == '\0')
 		return;
 
+	backlight_trigger();
 	keyboard_inject_event(p_item->effective_key, next_state);
 }
 
@@ -210,7 +285,7 @@ static void next_item_state(struct list_item * const p_item, const bool pressed)
 	}
 }
 
-static int64_t timer_task(alarm_id_t id, void *user_data)
+static int64_t idle_detector_timer_task(alarm_id_t id, void *user_data)
 {
 	(void)id;
 	(void)user_data;
@@ -411,5 +486,5 @@ void keyboard_init(void)
 	}
 #endif
 
-	add_alarm_in_ms(reg_get_value(REG_ID_FRQ), timer_task, NULL, true);
+	add_alarm_in_ms(reg_get_value(REG_ID_FRQ), idle_detector_timer_task, NULL, true);
 }
